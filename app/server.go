@@ -22,7 +22,7 @@ func handler(conn net.Conn) {
     return
   }
 
-  conn.Write([]byte("HTTP/1.1 400 Not Found\r\n\r\n"))
+  conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
 }
 
 
