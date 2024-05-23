@@ -22,6 +22,20 @@ func handler(conn net.Conn) {
     return
   }
 
+  if request.URL.Path[0:6] == "/echo/" {
+    body := request.URL.Path[6:]
+
+    if err != nil {
+      conn.Write([]byte("HTTP/1.1 400 Bad Request\r\n\r\n"))
+    }
+
+    response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\n Content-Type: text\\plain\r\n Content-Length: %d\r\n\r\n%s", len(body), body)
+
+    conn.Write([]byte(response_str))
+    return
+  }
+
+
   conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
 }
 
