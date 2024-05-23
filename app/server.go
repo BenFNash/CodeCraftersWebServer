@@ -34,7 +34,7 @@ func handler(conn net.Conn) {
     return
   }
 
-  root := "root"
+  root := ""
   echo := "echo"
   user_agent := "user-agent"
 
