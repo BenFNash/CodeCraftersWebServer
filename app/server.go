@@ -6,6 +6,7 @@ import (
 	"os"
   "net/http"
   "bufio"
+  "strings"
 )
 
 
@@ -33,22 +34,21 @@ func handler(conn net.Conn) {
     return
   }
 
-  if request.URL.Path == "/" {
-    conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
-    return
-  }
+  root := "root"
+  echo := "echo"
+  user_agent := "user-agent"
 
-  if request.URL.Path[0:6] == "/echo/" {
-    echoHandler(request, conn)
-    return
+  path := strings.Split(request.URL.Path, "/")[1:]
+  switch path[0] {
+    case root: 
+      conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
+    case echo:
+      echoHandler(request, conn)
+    case user_agent:
+      userAgentHandler(request, conn)
+    default:
+      conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
   }
-
-  if request.URL.Path[0:11] == "/user-agent" {
-    userAgentHandler(request, conn)
-    return
-  }
-
-  conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
 }
 
 
