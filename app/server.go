@@ -64,11 +64,13 @@ func main() {
   fmt.Println("Listening on port 4221")
   defer ln.Close()
 
-  conn, err := ln.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
-	}
+  for {
+    conn, err := ln.Accept()
+	  if err != nil {
+		  fmt.Println("Error accepting connection: ", err.Error())
+		  os.Exit(1)
+	  }
 
-  handler(conn)
+    go handler(conn)
+  }
 }
