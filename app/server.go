@@ -29,7 +29,7 @@ func handler(conn net.Conn) {
       conn.Write([]byte("HTTP/1.1 400 Bad Request\r\n\r\n"))
     }
 
-    response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text\\plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
+    response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
 
     conn.Write([]byte(response_str))
     return
