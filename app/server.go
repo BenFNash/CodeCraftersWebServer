@@ -8,6 +8,22 @@ import (
   "bufio"
 )
 
+
+func userAgentHandler(request *http.Request, conn net.Conn) {
+  userAgent := request.UserAgent()
+  response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-length: %d\r\n\r\n%s", len(userAgent), userAgent)
+  conn.Write([]byte(response_str))
+}
+
+
+func echoHandler(request *http.Request, conn net.Conn) {
+    body := request.URL.Path[6:]
+
+    response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
+
+    conn.Write([]byte(response_str))
+}
+
 func handler(conn net.Conn) {
   defer conn.Close()
   request, err := http.ReadRequest(bufio.NewReader(conn))
@@ -23,18 +39,14 @@ func handler(conn net.Conn) {
   }
 
   if request.URL.Path[0:6] == "/echo/" {
-    body := request.URL.Path[6:]
-
-    if err != nil {
-      conn.Write([]byte("HTTP/1.1 400 Bad Request\r\n\r\n"))
-    }
-
-    response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
-
-    conn.Write([]byte(response_str))
+    echoHandler(request, conn)
     return
   }
 
+  if request.URL.Path[0:11] == "/user-agent" {
+    userAgentHandler(request, conn)
+    return
+  }
 
   conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
 }
