@@ -19,8 +19,7 @@ func filePost(conn net.Conn, request *http.Request, directory string, filename s
 
   defer request.Body.Close()
 
-  fmt.Printf("inside Post")
-  err = ioutil.WriteFile("directory" + "filename", []byte(body), 0644)
+  err = ioutil.WriteFile(directory + filename, []byte(body), 0644)
   if err != nil {
     error_string := fmt.Sprintf("HTTP/1.1 500 Internal Server Error\r\nContent-type: text/plain\r\nContent-length: %d\r\n\r\n%s", len("Error writing body to file"), "Error writing body to file")
     conn.Write([]byte(error_string))
@@ -31,7 +30,6 @@ func filePost(conn net.Conn, request *http.Request, directory string, filename s
 
 func fileGet(conn net.Conn, directory string, filename string) {
 
-  fmt.Printf("inside Get")
   fileContent, err := os.ReadFile(directory + filename)
   
   if err != nil {
