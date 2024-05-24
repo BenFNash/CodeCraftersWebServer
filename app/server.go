@@ -7,110 +7,10 @@ import (
   "net/http"
   "bufio"
   "strings"
-  "io/ioutil"
-  "compress/gzip"
-  "bytes"
 )
 
-func filePost(conn net.Conn, request *http.Request, directory string, filename string) {
-  body, err := ioutil.ReadAll(request.Body)
-  if err != nil {
-    error_string := fmt.Sprintf("HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len("Error reading request body"), "Error reading request body")
-    conn.Write([]byte(error_string))
-  }
-
-  defer request.Body.Close()
-
-  err = ioutil.WriteFile(directory + filename, []byte(body), 0644)
-  if err != nil {
-    error_string := fmt.Sprintf("HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len("Error writing body to file"), "Error writing body to file")
-    conn.Write([]byte(error_string))
-  }
-
-  conn.Write([]byte("HTTP/1.1 201 Created\r\n\r\n"))
-}
-
-func fileGet(conn net.Conn, directory string, filename string) {
-
-  fileContent, err := os.ReadFile(directory + filename)
-  
-  if err != nil {
-    conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
-    return
-  }
-
-  response_string := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: %d\r\n\r\n%s", len(fileContent), fileContent)
-  conn.Write([]byte(response_string))
-}
 
 
-func filesHandler(request *http.Request, conn net.Conn) {
-  argsDir := os.Args[2]
-  filename := strings.Split(request.URL.Path, "/")[2]
-
-  var directory string
-  if argsDir[len(argsDir)-1] != '/' {
-    directory = argsDir + "/"
-  } else {
-    directory = argsDir
-  }
-
-  switch request.Method {
-  case http.MethodGet:
-    fileGet(conn, directory, filename)
-  case http.MethodPost:
-    filePost(conn, request, directory, filename)
-  }
-
-
-}
-
-
-func userAgentHandler(request *http.Request, conn net.Conn) {
-  userAgent := request.UserAgent()
-  response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(userAgent), userAgent)
-  conn.Write([]byte(response_str))
-}
-
-func gzipResponse(conn net.Conn, body string) {
-  var buf bytes.Buffer
-
-  gzipWriter := gzip.NewWriter(&buf)
-
-  _, err := gzipWriter.Write([]byte(body))
-  if err != nil {
-    error_string := fmt.Sprintf("HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len("Error compressing string"), "Error compressing string")
-    conn.Write([]byte(error_string))
-  }
-
-  err = gzipWriter.Close()
-  if err != nil {
-    error_string := fmt.Sprintf("HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len("Error compressing string"), "Error compressing string")
-    conn.Write([]byte(error_string))
-  }
-
-  compressedBody := buf.Bytes()
-  response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(compressedBody), compressedBody)
-  conn.Write([]byte(response_str))
-}
-
-func echoHandler(request *http.Request, conn net.Conn) {
-  body := request.URL.Path[6:]
-  encodingHeader := request.Header.Get("Accept-Encoding")
-
-  check_contains := strings.Contains(encodingHeader, ", gzip, ")
-  check_prefix := strings.HasPrefix(encodingHeader, "gzip, ")
-  check_suffix := strings.HasSuffix(encodingHeader, ", gzip")
-  check_equal := (encodingHeader == "gzip")
-
-  if check_equal || check_prefix || check_suffix || check_contains {
-    gzipResponse(conn, body)
-    return
-  }
-
-  response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
-  conn.Write([]byte(response_str))
-}
 
 func handler(conn net.Conn) {
   defer conn.Close()
@@ -131,11 +31,11 @@ func handler(conn net.Conn) {
     case root: 
       conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
     case echo:
-      echoHandler(request, conn)
+      EchoHandler(request, conn)
     case user_agent:
-      userAgentHandler(request, conn)
+      UserAgentHandler(request, conn)
   case files:
-      filesHandler(request, conn)
+      FilesHandler(request, conn)
     default:
       conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
   }
