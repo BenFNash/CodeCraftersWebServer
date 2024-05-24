@@ -76,7 +76,7 @@ func echoHandler(request *http.Request, conn net.Conn) {
   encodingHeader := request.Header.Get("Accept-Encoding")
 
   var response_str string
-  if encodingHeader == "gzip" {
+  if strings.Contains(encodingHeader, "gzip") {
   response_str = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
   } else {
     response_str = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
