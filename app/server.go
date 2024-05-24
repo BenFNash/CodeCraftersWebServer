@@ -25,7 +25,7 @@ func filePost(conn net.Conn, request *http.Request, directory string, filename s
     conn.Write([]byte(error_string))
   }
 
-  conn.Write([]byte("HTTP/1.1 201 OK\r\n\r\n"))
+  conn.Write([]byte("HTTP/1.1 201 Created\r\n\r\n"))
 }
 
 func fileGet(conn net.Conn, directory string, filename string) {
