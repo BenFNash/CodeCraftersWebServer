@@ -9,6 +9,29 @@ import (
   "strings"
 )
 
+func filesHandler(request *http.Request, conn net.Conn) {
+  argsDir := os.Args[2]
+  filename := strings.Split(request.URL.Path, "/")[2]
+
+  var directory string
+  if argsDir[len(argsDir)-1] != '/' {
+    directory = argsDir + "/"
+  } else {
+    directory = argsDir
+  }
+
+  fileContent, err := os.ReadFile(directory + filename)
+  
+  if err != nil {
+    conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
+    return
+  }
+
+  response_string := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-length: %d\r\n\r\n%s", len(fileContent), fileContent)
+  conn.Write([]byte(response_string))
+
+}
+
 
 func userAgentHandler(request *http.Request, conn net.Conn) {
   userAgent := request.UserAgent()
@@ -37,6 +60,7 @@ func handler(conn net.Conn) {
   root := ""
   echo := "echo"
   user_agent := "user-agent"
+  files := "files"
 
   path := strings.Split(request.URL.Path, "/")[1:]
   switch path[0] {
@@ -46,6 +70,8 @@ func handler(conn net.Conn) {
       echoHandler(request, conn)
     case user_agent:
       userAgentHandler(request, conn)
+  case files:
+      filesHandler(request, conn)
     default:
       conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
   }
