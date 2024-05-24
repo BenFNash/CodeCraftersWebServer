@@ -7,7 +7,40 @@ import (
   "net/http"
   "bufio"
   "strings"
+  "io/ioutil"
 )
+
+func filePost(conn net.Conn, request *http.Request, directory string, filename string) {
+  body, err := ioutil.ReadAll(request.Body)
+  if err != nil {
+    error_string := fmt.Sprintf("HTTP/1.1 500 Internal Server Error\r\nContent-type: text/plain\r\nContent-length: %d\r\n\r\n%s", len("Error reading request body"), "Error reading request body")
+    conn.Write([]byte(error_string))
+  }
+
+  defer request.Body.Close()
+
+  err = ioutil.WriteFile("directory" + "filename", []byte(body), 0644)
+  if err != nil {
+    error_string := fmt.Sprintf("HTTP/1.1 500 Internal Server Error\r\nContent-type: text/plain\r\nContent-length: %d\r\n\r\n%s", len("Error writing body to file"), "Error writing body to file")
+    conn.Write([]byte(error_string))
+  }
+
+  conn.Write([]byte("HTTP/1.1 201 OK\r\n\r\n"))
+}
+
+func fileGet(conn net.Conn, directory string, filename string) {
+
+  fileContent, err := os.ReadFile(directory + filename)
+  
+  if err != nil {
+    conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
+    return
+  }
+
+  response_string := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-length: %d\r\n\r\n%s", len(fileContent), fileContent)
+  conn.Write([]byte(response_string))
+}
+
 
 func filesHandler(request *http.Request, conn net.Conn) {
   argsDir := os.Args[2]
@@ -20,15 +53,13 @@ func filesHandler(request *http.Request, conn net.Conn) {
     directory = argsDir
   }
 
-  fileContent, err := os.ReadFile(directory + filename)
-  
-  if err != nil {
-    conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
-    return
+  switch request.Method {
+  case http.MethodGet:
+    fileGet(conn, directory, filename)
+  case http.MethodPost:
+    filePost(conn, request, directory, filename)
   }
 
-  response_string := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-length: %d\r\n\r\n%s", len(fileContent), fileContent)
-  conn.Write([]byte(response_string))
 
 }
 
