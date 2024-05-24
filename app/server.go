@@ -13,7 +13,7 @@ import (
 func filePost(conn net.Conn, request *http.Request, directory string, filename string) {
   body, err := ioutil.ReadAll(request.Body)
   if err != nil {
-    error_string := fmt.Sprintf("HTTP/1.1 500 Internal Server Error\r\nContent-type: text/plain\r\nContent-length: %d\r\n\r\n%s", len("Error reading request body"), "Error reading request body")
+    error_string := fmt.Sprintf("HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len("Error reading request body"), "Error reading request body")
     conn.Write([]byte(error_string))
   }
 
@@ -21,7 +21,7 @@ func filePost(conn net.Conn, request *http.Request, directory string, filename s
 
   err = ioutil.WriteFile(directory + filename, []byte(body), 0644)
   if err != nil {
-    error_string := fmt.Sprintf("HTTP/1.1 500 Internal Server Error\r\nContent-type: text/plain\r\nContent-length: %d\r\n\r\n%s", len("Error writing body to file"), "Error writing body to file")
+    error_string := fmt.Sprintf("HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len("Error writing body to file"), "Error writing body to file")
     conn.Write([]byte(error_string))
   }
 
@@ -37,7 +37,7 @@ func fileGet(conn net.Conn, directory string, filename string) {
     return
   }
 
-  response_string := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-length: %d\r\n\r\n%s", len(fileContent), fileContent)
+  response_string := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: %d\r\n\r\n%s", len(fileContent), fileContent)
   conn.Write([]byte(response_string))
 }
 
@@ -66,15 +66,20 @@ func filesHandler(request *http.Request, conn net.Conn) {
 
 func userAgentHandler(request *http.Request, conn net.Conn) {
   userAgent := request.UserAgent()
-  response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-length: %d\r\n\r\n%s", len(userAgent), userAgent)
+  response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(userAgent), userAgent)
   conn.Write([]byte(response_str))
 }
 
 
 func echoHandler(request *http.Request, conn net.Conn) {
     body := request.URL.Path[6:]
+    encodingHeader := request.Header.Get("Accept-Encoding")
 
-    response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
+    if encodingHeader == "gzip" {
+    response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
+    } else {
+      response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
+    }
 
     conn.Write([]byte(response_str))
 }
