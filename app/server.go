@@ -72,16 +72,17 @@ func userAgentHandler(request *http.Request, conn net.Conn) {
 
 
 func echoHandler(request *http.Request, conn net.Conn) {
-    body := request.URL.Path[6:]
-    encodingHeader := request.Header.Get("Accept-Encoding")
+  body := request.URL.Path[6:]
+  encodingHeader := request.Header.Get("Accept-Encoding")
 
-    if encodingHeader == "gzip" {
-    response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
-    } else {
-      response_str := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
-    }
+  var response_str string
+  if encodingHeader == "gzip" {
+  response_str = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
+  } else {
+    response_str = fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
+  }
 
-    conn.Write([]byte(response_str))
+  conn.Write([]byte(response_str))
 }
 
 func handler(conn net.Conn) {
